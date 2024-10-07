@@ -1,0 +1,35 @@
+- Install ansible
+student@pod-[username]-controller:~$ sudo apt update
+student@pod-[username]-controller:~$ sudo apt install -y software-properties-common
+
+- Configure PPA
+student@pod-[username]-controller:~$ sudo add-apt-repository --yes --update ppa:ansible/ansible
+student@pod-[username]-controller:~$ sudo apt install ansible
+student@pod-[username]-controller:~$ ansible --version
+
+Note : 
+PPA stands for “Personal Package Archive” and is a kind of software repository developed and published by application developers 
+and Linux users to store and distribute software packages that cannot be found in official operating system repositories.
+
+- Setup default configuration
+student@pod-[username]-controller:~$ sudo mkdir -p /etc/ansible
+student@pod-[username]-controller:~$ sudo vim /etc/ansible/hosts
+
+---
+pod-[username]-managed1
+
+[webservers]
+pod-[username]-managed2
+---
+
+- Show all hosts
+student@pod-[username]-controller:~$ ansible all --list-hosts
+
+- Show ungrouped host
+student@pod-[username]-controller:~$ ansible ungrouped --list-hosts
+
+- Show grouped host
+student@pod-[username]-controller:~$ ansible webservers --list-hosts
+
+- Check ping
+student@pod-[username]-controller:~$ ansible all -m ping

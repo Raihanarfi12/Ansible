@@ -1,0 +1,47 @@
+#Show hostname
+student@pod-username-controller:~$ ansible all -m command -a "hostname"
+
+#Show facts about server managed1
+student@pod-username-controller:~$ ansible pod-username-managed1 -m setup 
+
+#Check information about localhost
+student@pod-username-controller:~$ ansible localhost -m command -a 'id'
+student@pod-username-controller:~$ ansible localhost -u student -m command -a 'id'
+
+4. Update content to file /etc/motd. (message of the day content, message saat login)
+student@pod-username-controller:~$ ansible pod-username-managed1 --become -u student -m copy -a "content='Executed by Ansible\n' dest=/etc/motd"
+
+student@pod-username-controller:~$ ansible pod-username-managed1 -u student -m command -a 'cat /etc/motd'
+---
+pod-raihanarfi12-controller
+
+[Bogor]
+pod-raihanarfi12-managed1
+
+[Jakarta]
+pod-raihanarfi12-managed2
+
+[WebServers]
+pod-raihanarfi12-managed[1:2]
+
+[Testing]
+pod-raihanarfi12-managed1
+
+[Development]  
+pod-raihanarfi12-managed2
+
+[Indonesia:children]
+Jakarta
+Bogor
+---
+#list all host in this inventory
+#ansible all -i inventory --list-hosts
+
+#list ungrouped host in this inventory
+#ansbile ungrouped -i inventory --list-hosts
+
+#List to specific group hosts in this inventory
+#ansible Development -i inventory --list-hosts
+
+#ping all hosts in inventory
+#ansible Indonesia -i inventory -m ping

@@ -1,0 +1,89 @@
+mkdir quiz-1
+cd ~/quiz-1
+
+vim ansible.cfg
+---
+[defaults]
+inventory=./inventory
+remote_user=student
+host_key_checking = False
+---
+
+vim inventory
+---
+[server]
+pod-raihanarfi12-managed2
+---
+
+vim quiz1_playbook.yml
+---
+- name: Quiz Playbook
+  hosts: server
+  become: yes
+  vars:
+    web_pkg: apache2
+    db_pkg: mariadb-server
+    be_pkg: php
+    dbbe_pkg: php-mysql
+    web_service: apache2
+    db_service: mariadb
+
+  tasks:
+  - name: Install required package
+    apt:
+      update_cache: yes
+      force_apt_get: yes
+      name:
+        - "{{web_pkg}}"
+        - "{{db_pkg}}"
+        - "{{be_pkg}}"
+        - "{{dbbe_pkg}}"
+      state: latest
+
+  - name: Gather package facts
+    package_facts:
+      manager: "auto"
+
+  - name: Show package version
+    debug:
+      msg: "{{item}}: {{ ansible_facts.packages[item][0].version }}"
+    loop:
+       - "{{web_pkg}}"
+       - "{{db_pkg}}"
+       - "{{be_pkg}}"
+       - "{{dbbe_pkg}}"
+
+  - name: Ensure web and database services are started and enabled
+    service:
+      name: "{{ item }}"
+      enabled: true
+      state: started
+    loop:
+      - "{{web_service}}"
+      - "{{db_service}}"
+
+
+  - name: Replace php content
+    copy:
+      content: "Adinusa quiz Playbook - raihanarfi12"
+      dest: /var/www/html/index.php
+
+- name: Verify the web server is accessible
+  hosts: localhost
+  tasks:
+    - name: Testing web server
+      uri:
+        url: http://pod-raihanarfi12-managed2
+        status_code: 200
+        return_content: yes
+      register: Result #register disini menyimpan content dari web dengan variable Result
+
+    - name: Print Output web server
+      debug:
+        var: Result.content
+---
+ansible-playbook --syntax-check playbook.yml
+ansible-playbook playbook.yml
+    
+
+

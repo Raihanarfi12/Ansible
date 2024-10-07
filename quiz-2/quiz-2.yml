@@ -1,0 +1,61 @@
+mkdir quiz-2
+cd quiz-2
+
+vim ansible.cfg
+---
+[defaults]
+inventory=./inventory
+remote_user=student
+host_key_checking = False
+---
+vim inventory
+---
+[server]
+pod-raihanarfi12-managed2
+---
+vim quiz-2_variables.yml
+---
+- name: Quiz Playbook
+  hosts: server
+  become: yes
+  vars:
+    required_Pkg:
+      - apache2
+      - python3-urllib3
+    web_Service: apache2
+    content_File: "adinusa lab quiz variables - raihanarfi12"
+    dest_File: /var/www/html/index.html
+  
+  tasks:
+  - name: Install required package
+    apt:
+      update_cache: yes
+      force_apt_get: yes
+      state: present # cek package, jika belum ada install, maka install, jika ada, tidak ada perubahan (selain itu ada latest,fixed, dan absent)
+      name: "{{ required_Pkg }}"
+  
+  - name: Verify that service is enabled
+    service:
+      name: "{{web_Service}}"
+      enabled: true
+      state: started
+    
+  - name: Web content is in place
+    copy:
+      content: "{{content_File}}"
+      dest: "{{dest_File}}"
+
+- name: Verify web service can be accessed
+  hosts: localhost
+  tasks:
+    - name: Testing web server
+      uri:
+        url: http://pod-raihanarfi12-managed2
+        status_code: 200
+        return_content: yes
+      register: Result #register disini menyimpan content dari web dengan variable Result
+
+    - name: Print Output web server
+      debug:
+        var: Result.content
+---

@@ -1,0 +1,210 @@
+*Playbook
+--> Konfigurasi yang digunakan repeatable yang dapat digunakan pada multi machine
+--> declare configuration
+--> orchestrate many step of configuration or manual order process on multiple machine (executed from top to bottom of configuration)
+--> launch takes synchronous or asynschronous
+
+Contoh format ansible (YAML)
+---
+- name: update web servers
+  hosts: webservers
+  remote_user: root
+
+  tasks:
+  - name: ensure apache is at the latest version
+    yum:
+      name: httpd
+      state: latest
+  - name: write the apache config file
+    template:
+      src: /srv/httpd.j2
+      dest: /etc/httpd.conf
+
+- name: update db servers
+  hosts: databases
+  remote_user: root
+
+  tasks:
+  - name: ensure postgresql is at the latest version
+    yum:
+      name: postgresql
+      state: latest
+  - name: ensure that postgresql is started
+    service:
+      name: postgresql
+      state: started
+
+Task for ad-hoc command
+ansible atlanta -m ansible.builtin.copy -a "src=/etc/hosts dest=/tmp/hosts"
+
+Playbook file structure
+# playbooks
+site.yml
+webservers.yml
+fooservers.yml
+roles/
+    common/
+        tasks/
+        handlers/
+        library/
+        files/
+        templates/
+        vars/
+        defaults/
+        meta/
+    webservers/
+        tasks/
+        defaults/
+        meta/
+
+tasks/main.yml - the main list of tasks that the role executes.
+handlers/main.yml - handlers, which may be used within or outside this role.
+library/my_module.py - modules, which may be used within this role (see Embedding modules and plugins in roles for more information).
+defaults/main.yml - default variables for the role (see Using Variables for more information). These variables have the lowest priority of any variables available, and can be easily overridden by any other variable, including inventory variables.
+vars/main.yml - other variables for the role (see Using Variables for more information).
+files/main.yml - files that the role deploys.
+templates/main.yml - templates that the role deploys.
+meta/main.yml- metadata for the role, including role dependencies.
+
+*Modules
+--> biasanya disebut task or library plugins
+--> Unit code terpisah yang biasanya berisi command line
+
+Contoh
+ansible workerservers -m service -a "name=httpd state=started"
+ansible workerservers -m ping
+ansible workerservers -m command -a "/sbin/reboot -t now"
+
+- penggunaan module menggunakan -m
+- setiap module membutuhkan argumen (-a), dimana setiap argumen terdiri dari key=value dan dipisahkan dengan spasi
+
+List available module
+ansible-doc -l
+dokumentasi tiap module
+ansible-doc service
+
+*Variables
+--> Bisa didefine langsung pada file playbook, atau command line, atau hasil dari register variable dari output suatu sistem
+
+Contoh penggunaan variable
+---
+- hosts: all
+  remote_user: root
+  vars:
+    favcolor: blue
+  vars_files:
+    - /vars/external_vars.yml
+
+  tasks:
+  - name: This is just a placeholder
+    ansible.builtin.command: /bin/echo foo
+
+Variable precedence
+--> Semakin bawah, maka semakin diutamakan
+
+1. command line values (for example, -u my_user, these are not variables)
+2. role defaults (defined in role/defaults/main.yml)
+3. inventory file or script group vars
+4. inventory group_vars/all
+5. playbook group_vars/all
+6. inventory group_vars/*
+7. playbook group_vars/*
+8. inventory file or script host vars
+9. inventory host_vars/*
+10. playbook host_vars/*
+11. host facts / cached set_facts
+12. play vars
+13. play vars_prompt
+14. play vars_files
+15. role vars (defined in role/vars/main.yml)
+16. block vars (only for tasks in block)
+17. task vars (only for the task)
+18. include_vars
+19. set_facts / registered vars
+20. role (and include_role) params
+21. include params
+22. extra vars (for example, -e "user=my_user")(always win precedence)
+
+*Loop
+*Simple iterative
+- name: Add several users
+  ansible.builtin.user:
+    name: "{{ item }}"
+    state: present
+    groups: "wheel"
+  loop:
+     - testuser1
+     - testuser2
+
+* Iterative dengan list
+- name: Add several users
+  ansible.builtin.user:
+    name: "{{ item.name }}"
+    state: present
+    groups: "{{ item.groups }}"
+  loop:
+    - { name: 'testuser1', groups: 'wheel' }
+    - { name: 'testuser2', groups: 'root' }
+
+*Conditional
+*Basic example Conditional
+tasks:
+  - name: Configure SELinux to start mysql on any port
+    ansible.posix.seboolean:
+      name: mysql_connect_any
+      state: true
+      persistent: yes
+    when: ansible_selinux.status == "enabled"
+*Based on facts
+tasks:
+  - name: Shut down Debian flavored systems
+    ansible.builtin.command: /sbin/shutdown -t now
+    when: ansible_facts['os_family'] == "Debian"
+
+*Priviledge escalation
+--> Menjalankan task ansible dengan user tertentu, berbeda dengan user saat memasuki machine
+
+- name: Run a command as root
+  command: apt update
+  become: yes
+  become_user: root
+
+*Secrets
+- encrpyt variable and files
+
+-encrpyt data
+ansible-vault encrypt foo.yml bar.yml
+
+-view Secrets
+ansible-vault view foo.yml bar.yml baz.yml
+
+-editing Secrets
+ansible-vault edit foo.yml
+
+-decrpyt data
+ansible-vault decrypt foo.yml bar.yml baz.yml
+
+*Jinja 2 template
+--> dynamic expression and access to variable
+--> include lots of specialized filter and test for templating
+--> file that contains variable that can be replaced by actual values upon runtime or code execution
+
+Tags:
+- {{}} --> embedding variables and printing their value during code execution. Contoh penggunaan : {{webservers}}, {{nginx-version}}
+- {%%} --> control statement. ex : if-else, loop
+- {##} --> comment that describe task
+
+Contoh perbandingan playbook dan Jinja :
+Playbook:
+- hosts: appserver
+  vars:
+      username: user88
+      version_number: 2.4
+      hostname: myserver
+  tasks:
+    - name: jinja2 template
+      template: src=index.html.j2 dest=/var/www/html/index.html
+
+Jinja 2 files:
+Hi {{ username | upper }}!
+This come from apache2 webserver with version {{ version_number }} is running on {{ hostname }}

@@ -1,0 +1,63 @@
+student@pod-username-controller:~$ cd ~/
+student@pod-username-controller:~$ mkdir conditional-loop
+student@pod-username-controller:~$ cd conditional-loop
+
+student@pod-username-controller:~/conditional-loop$ vi ansible.cfg
+---
+[defaults]
+inventory = ./inventory
+---
+
+student@pod-username-controller:~/conditional-loop$ vi inventory
+---
+[database_servers]
+pod-username-managed2
+---
+
+student@pod-username-controller:~/conditional-loop$ vi database_setup.yml
+student@pod-username-controller:~/conditional-loop$ vi Ubuntu_database_user_tasks.yml
+---
+- name: Set the 'db_service' fact
+  set_fact:
+    db_service: mariadb
+- name: Ensure database packages are installed
+  apt:
+    name:
+      - mariadb-server
+      - python3-pymysql
+    state: present
+- name: Ensure the database service is started
+  service:
+    name: "{{ db_service }}"
+    state: started
+    enabled: true
+- name: Create Database Users
+  include_tasks: database_user_tasks.yml
+---
+student@pod-username-controller:~/conditional-loop$ mkdir group_vars
+student@pod-username-controller:~/conditional-loop$ vi group_vars/database_servers.yml
+---
+host_permission_groups:
+  - dbadmin
+  - dbuser
+---
+
+
+student@pod-username-controller:~/conditional-loop$ vi group_vars/all.yml
+---
+user_list:
+  - name: Raihan Arfi Admin
+    username: raihanarfi12
+    password: adinusa88
+    access: ALL
+    role: dbadmin
+  - name: Raihan Arfi User
+    username: raihanarfi12
+    password: adinusa88
+    access: SELECT
+    role: dbuser
+---
+
+student@pod-username-controller:~/conditional-loop$ ansible-playbook \
+> --syntax-check database_setup.yml 
+student@pod-username-controller:~/conditional-loop$ ansible-playbook database_setup.yml

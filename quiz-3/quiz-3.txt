@@ -1,0 +1,75 @@
+mkdir quiz-3
+cd ~/quiz-3
+
+#make required file
+touch quiz-3_j2template.yml
+touch nginx.list.j2
+touch mariadb.list.j2
+touch inventory
+touch ansible.cfg
+
+vim ansible.cfg
+---
+[defaults]
+inventory = ./inventory
+remote_user = student
+---
+
+vim inventory
+---
+[webservers]
+pod-raihanarfi12-managed[1:2]
+
+vim nginx.list.j2
+---
+deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] http://nginx.org/packages/mainline/ubuntu jammy nginx
+deb-src [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] http://nginx.org/packages/mainline/ubuntu jammy nginx
+---
+
+vim mariadb.list.j2
+---
+# MariaDB 10.9 repository list
+deb https://mirrors.aliyun.com/mariadb/repo/10.9/ubuntu jammy main
+deb-src https://mirrors.aliyun.com/mariadb/repo/10.9/ubuntu jammy main
+---
+
+vim quiz-3_j2template.yml
+---
+- name: Quiz Jinja 2
+  hosts: all
+  become: true
+  vars:
+    required_pkg:
+      - nginx=1.23.1-1~jammy
+      - mariadb-server-10.9
+      - mariadb-client-10.9
+  tasks:
+    - name: copy MariaDB Repo
+      template: src=mariadb.list.j2 dest=/etc/apt/sources.list.d/mariadb.list
+    - name: copy Nginx Repo
+      template: src=nginx.list.j2 dest=/etc/apt/sources.list.d/nginx.list
+    - name: Install GPG Key for Nginx Repo
+      shell: curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor | sudo tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
+    - name: Install GPG Key for MariaDB Repo
+      shell: sudo curl -o /etc/apt/trusted.gpg.d/mariadb_release_signing_key.asc 'https://mariadb.org/mariadb_release_signing_key.asc'
+    - name: Update Repo
+      apt:
+        update_cache: true
+        force_apt_get: true
+    - name: Install Required Package
+      apt:
+        update_cache: yes
+        force_apt_get: yes
+        name: "{{required_pkg}}"
+        state: latest
+    - name: The Nginx service is started and enabled
+      service: name=nginx state=started enabled=true
+    - name: The MariaDB Server is started and enabled
+      service: name=mariadb state=started enabled=true
+---
+
+Install nginx manual for specific version
+https://medium.com/@wickramasooriyahpe.19/install-nginx-1-23-4-version-on-ubuntu-22-04-8423489d42c1
+
+Install mariadb manual for specific version
+https://computingforgeeks.com/how-to-install-mariadb-on-debian/#google_vignette
