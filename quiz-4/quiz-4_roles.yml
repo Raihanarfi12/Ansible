@@ -1,0 +1,4 @@
+- hosts: managed
+  become: yes
+  roles:
+    - quiz-roles
