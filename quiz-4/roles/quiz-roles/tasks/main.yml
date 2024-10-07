@@ -1,36 +1,45 @@
 # Task to install apache2 package
-- name: Install apache2 package
+- name: Install Apache2 package
   apt:
     name: apache2
     state: present
-    update_cache: yes
+  become: yes
 
-# Task to ensure apache2 service is started and enabled
-- name: Ensure apache2 service is started and enabled
+# Task to ensure Apache2 service is started and enabled
+- name: Ensure Apache2 service is started and enabled
   service:
     name: apache2
     state: started
     enabled: yes
+  become: yes
 
-# Task to use template module to install quiz-roles.conf.j2
-- name: Install quiz-roles.conf template
+# Task to deploy webserver configuration using template module
+- name: Deploy quiz-roles Apache2 configuration
   template:
     src: quiz-roles.conf.j2
     dest: /etc/apache2/sites-available/quiz-roles.conf
   notify:
-    - Restart apache2 service
+    - Restart Apache2
+  become: yes
 
-# Task to enable the webserver configuration using a2ensite command
-- name: Enable quiz-roles webserver configuration
+# Disable default site configuration
+- name: Disable default configuration
+  command: a2dissite 000-default.conf
+  become: yes
+
+# Task to enable the quiz-roles site configuration using a2ensite
+- name: Enable quiz-roles site
   command: a2ensite quiz-roles.conf
   notify:
-    - Restart apache2 service
+    - Restart Apache2
+  become: yes
 
-# Task to copy files using the copy module
-- name: Copy html-quiz/ to /var/www/quiz-roles/{{ ansible_hostname }}
+# Task to copy HTML files to the managed host's web directory
+- name: Copy HTML files to web directory
   copy:
     src: html-quiz/
     dest: /var/www/quiz-roles/{{ ansible_hostname }}
     owner: www-data
     group: www-data
     mode: '0755'
+  become: yes

@@ -1,5 +1,5 @@
 # Handler to restart apache2 service
-- name: Restart apache2 service
+- name: Restart Apache2
   service:
     name: apache2
     state: restarted
