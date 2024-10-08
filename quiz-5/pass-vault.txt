@@ -1,4 +1,4 @@
-ansible-vault encrypt quiz-Secret.yml
+ansible-vault encrypt quiz-Secret.yml (after create quiz-Secret.yml with username and password)
 ansible-playbook --syntax-check --ask-vault-pass quiz-5_secrets.yml
 chmod 600 quiz-pass
 ansible-playbook --vault-password-file=quiz-pass quiz-5_secrets.yml
