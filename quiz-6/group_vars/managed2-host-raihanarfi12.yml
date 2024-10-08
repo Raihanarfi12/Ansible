@@ -1,0 +1,2 @@
+list_user_ops_managed2: "{{ ['ops' + item|string for item in range(51, 101)] }}"
+list_user_dev_managed2: "{{ ['dev' + item|string for item in range(51, 101)] }}"
