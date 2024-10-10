@@ -2,3 +2,8 @@ ansible-vault encrypt secret.yml (after create quiz-Secret.yml with pass)
 ansible-playbook --syntax-check --ask-vault-pass quiz-6_loop.yml
 chmod 600 vault-pass
 ansible-playbook --vault-password-file=vault-pass quiz-6_loop.yml
+
+Command for create list of users
+chmod +x generate_list_users.sh
+./generate_list_users.sh
+After create list of users done, we can remove generate_list_users.sh file
