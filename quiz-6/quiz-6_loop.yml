@@ -4,16 +4,16 @@
     - secret.yml
 
   tasks:
-    - name: Create users in pod-<username>-managed1
+    - name: Create users in pod-raihanarfi12-managed1
       user:
         name: "{{ item }}"
         password: "{{ pass | password_hash('sha512') }}"
       loop: "{{ list_user_dev_managed1 + list_user_ops_managed1 }}"
-      when: inventory_hostname == "pod-<username>-managed1"
+      when: inventory_hostname == "pod-raihanarfi12-managed1"
 
-    - name: Create users in pod-<username>-managed2
+    - name: Create users in pod-raihanarfi12-managed2
       user:
         name: "{{ item }}"
         password: "{{ pass | password_hash('sha512') }}"
       loop: "{{ list_user_dev_managed2 + list_user_ops_managed2 }}"
-      when: inventory_hostname == "pod-<username>-managed2"
+      when: inventory_hostname == "pod-raihanarfi12-managed2"
