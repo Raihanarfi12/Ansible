@@ -9,11 +9,11 @@
         name: "{{ item }}"
         password: "{{ pass | password_hash('sha512') }}"
       loop: "{{ list_user_dev_managed1 + list_user_ops_managed1 }}"
-      when: inventory_hostname == "pod-raihanarfi12-managed1"
+      when: "'managed1-host-raihanarfi12' in group_names"
 
     - name: Create users in pod-raihanarfi12-managed2
       user:
         name: "{{ item }}"
         password: "{{ pass | password_hash('sha512') }}"
       loop: "{{ list_user_dev_managed2 + list_user_ops_managed2 }}"
-      when: inventory_hostname == "pod-raihanarfi12-managed2"
+      when: "'managed2-host-raihanarfi12' in group_names"
